@@ -1,0 +1,44 @@
+src/leelaz -g -q -n -d -m 30 -r 0 --weights weights.txt -p 1000 --noponder
+
+src/leelaz -n -d -m 30 -r 0 --weights weights.txt -p 1000 --noponder
+	   -n Enable policy network randomization.
+	   -d Don't use heuristics for smarter passing.
+	   -m 30 Play more randomly the first x moves.
+	   -r 0 Resign when winrate is less than x%.
+	   -p 1000 Weaken engine by limiting the number of playouts.
+
+
+https://www.gnu.org/software/gnugo/gnugo_19.html	
+virihaure 462% ./gnugo --mode gtp
+1 boardsize 7
+=1
+
+2 clear_board
+=2
+
+3 play black D5
+=3
+
+4 genmove white
+=4 C3
+
+5 play black C3
+?5 illegal move
+
+6 play black E3
+=6
+
+7 showboard
+=7
+   A B C D E F G
+ 7 . . . . . . . 7
+ 6 . . . . . . . 6
+ 5 . . + X + . . 5
+ 4 . . . + . . . 4
+ 3 . . O . X . . 3
+ 2 . . . . . . . 2     WHITE (O) has captured 0 stones
+ 1 . . . . . . . 1     BLACK (X) has captured 0 stones
+   A B C D E F G
+
+8 quit
+=8
