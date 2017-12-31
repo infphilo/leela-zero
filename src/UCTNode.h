@@ -73,6 +73,9 @@ public:
     void sort_root_children(int color);
     UCTNode* get_best_root_child(int color);
     SMP::Mutex & get_mutex();
+    
+    void set_must() { m_must = true; }
+    bool must() const { return m_must; }
 
 private:
     UCTNode();
@@ -93,6 +96,7 @@ private:
     // UCT eval
     float m_score;
     float m_init_eval;
+    bool m_must;
     std::atomic<double> m_blackevals{0};
     // node alive (not superko)
     std::atomic<bool> m_valid{true};

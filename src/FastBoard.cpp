@@ -168,6 +168,7 @@ void FastBoard::reset_board(int size) {
 }
 
 bool FastBoard::is_suicide(int i, int color) {
+    return false;
     if (count_pliberties(i)) {
         return false;
     }
@@ -337,19 +338,56 @@ std::vector<bool> FastBoard::calc_reach_color(int col) {
 
 // Needed for scoring passed out games not in MC playouts
 float FastBoard::area_score(float komi) {
-    auto white = calc_reach_color(WHITE);
-    auto black = calc_reach_color(BLACK);
-
     auto score = -komi;
 
-    for (int i = 0; i < m_boardsize; i++) {
-        for (int j = 0; j < m_boardsize; j++) {
-            auto vertex = get_vertex(i, j);
+    // DK - area score
+    for (int a = 0; a < m_boardsize; a++) {
+        for (int b = 0; b < m_boardsize; b++) {
+            std::pair<int, int> pos(a, b);
+            square_t color = get_square(a, b);
+            if(color != BLACK && color != WHITE)
+                break;
+            
+            int dir[4][2][2] = {
+                {{-1,  0}, {1,  0}},
+                {{ 0, -1}, {0,  1}},
+                {{-1, -1}, {1,  1}},
+                {{-1,  1}, {1, -1}}};
+            for(int i = 0; i < 4; i++) {
+                int count = 1, vcount = 1;
+                for(int j = 0; j < 2; j++) {
+                    std::pair<int, int> tpos = pos;
+                    tpos.first += dir[i][j][0];
+                    tpos.second += dir[i][j][1];
+                    bool discontinue = false;
+                    while(tpos.first  >= 0 && tpos.first < MAXBOARDSIZE &&
+                          tpos.second >= 0 && tpos.second < MAXBOARDSIZE) {
+                        square_t tcolor = get_square(tpos.first, tpos.second);
+                        if(tcolor != color) {
+                            discontinue = true;
+                            if(tcolor != EMPTY)
+                                break;
+                        }
+                        if(!discontinue) {
+                            count += 1;
+                        }
+                        vcount += 1;
+                        tpos.first += dir[i][j][0];
+                        tpos.second += dir[i][j][1];
+                    }
+                }
+                if(vcount < DK_num_stone)
+                    continue;
 
-            if (white[vertex] && !black[vertex]) {
-                score -= 1.0f;
-            } else if (black[vertex] && !white[vertex]) {
-                score += 1.0f;
+                if(color == WHITE) {
+                    score -= float(count);
+                    if(count >= DK_num_stone)
+                        score -= 10000.0f;
+                } else {
+                    score += float(count);
+                    if(count >= DK_num_stone)
+                        score -= 10000.0f;
+                }
             }
         }
     }

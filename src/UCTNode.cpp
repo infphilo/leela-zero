@@ -45,7 +45,7 @@
 using namespace Utils;
 
 UCTNode::UCTNode(int vertex, float score, float init_eval)
-    : m_move(vertex), m_score(score), m_init_eval(init_eval) {
+    : m_move(vertex), m_score(score), m_init_eval(init_eval), m_must(false) {
 }
 
 UCTNode::~UCTNode() {
@@ -99,7 +99,30 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
 
     auto raw_netlist = Network::get_scored_moves(
         &state, Network::Ensemble::RANDOM_ROTATION);
-
+    
+    // DK - no pass
+    for (auto& node : raw_netlist.first) {
+        if(node.second == FastBoard::PASS) {
+            node.first = 0.0;
+        }
+    }
+    
+    // DK - just random score, only for the first time
+#if 1
+    float sum = 0.0f;
+    for (auto& node : raw_netlist.first) {
+        if(node.second == FastBoard::PASS) {
+            node.first = 0.0;
+        } else {
+            node.first = 100.0f + Random::get_Rng().randflt();
+            sum += node.first;
+        }
+    }
+    for (auto& node : raw_netlist.first) {
+        node.first /= sum;
+    }
+#endif
+    
     // DCNN returns winrate as side to move
     auto net_eval = raw_netlist.second;
     auto to_move = state.board.get_to_move();
@@ -115,25 +138,61 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     auto legal_sum = 0.0f;
     for (auto& node : raw_netlist.first) {
         auto vertex = node.second;
-        if (vertex != FastBoard::PASS) {
-            if (vertex != state.m_komove
-                && !board.is_suicide(vertex, board.get_to_move())) {
-                nodelist.emplace_back(node);
-                legal_sum += node.first;
+        // DK
+        if (vertex != FastBoard::PASS && board.get_square(vertex) == FastBoard::EMPTY) {
+            std::pair<int, int> pos = board.get_xy(vertex);
+            int dir[4][2][2] = {
+                {{-1,  0}, {1,  0}},
+                {{ 0, -1}, {0,  1}},
+                {{-1, -1}, {1,  1}},
+                {{-1,  1}, {1, -1}}};
+            for(int c = 0; c < 2; c++) {
+                FastBoard::square_t color = c == 0 ? FastBoard::BLACK : FastBoard::WHITE;
+                for(int i = 0; i < 4; i++) {
+                    int count = 1, vcount = 1;
+                    for(int j = 0; j < 2; j++) {
+                        std::pair<int, int> tpos = pos;
+                        tpos.first += dir[i][j][0];
+                        tpos.second += dir[i][j][1];
+                        bool discontinue = false;
+                        while(tpos.first  >= 0 && tpos.first < FastBoard::MAXBOARDSIZE &&
+                              tpos.second >= 0 && tpos.second < FastBoard::MAXBOARDSIZE) {
+                            FastBoard::square_t tcolor = board.get_square(tpos.first, tpos.second);
+                            if(tcolor != color) {
+                                discontinue = true;
+                                if(tcolor != FastBoard::EMPTY)
+                                    break;
+                            }
+                            if(!discontinue) {
+                                count += 1;
+                            }
+                            vcount += 1;
+                            tpos.first += dir[i][j][0];
+                            tpos.second += dir[i][j][1];
+                        }
+                    }
+                    if(count >= DK_num_stone) {
+                        node.first = 1.0f;
+                        if(color == to_move) {
+                            node.first = 2.0f;
+                        }
+                    }
+                }
             }
-        } else {
-            nodelist.emplace_back(node);
-            legal_sum += node.first;
         }
+        nodelist.emplace_back(node);
+        legal_sum += node.first;
     }
 
     // If the sum is 0 or a denormal, then don't try to normalize.
+    /*
     if (legal_sum > std::numeric_limits<float>::min()) {
         // re-normalize after removing illegal moves.
         for (auto& node : nodelist) {
             node.first /= legal_sum;
         }
     }
+     */
 
     link_nodelist(nodecount, nodelist, net_eval);
 
@@ -156,9 +215,25 @@ void UCTNode::link_nodelist(std::atomic<int> & nodecount,
     auto childrenadded = 0;
 
     LOCK(get_mutex(), lock);
+    
+    // re-normalize after removing illegal moves.
+    float legal_sum = 0.0;
+    for (auto& node : nodelist) {
+        legal_sum += node.first;
+    }
+    if(legal_sum < std::numeric_limits<float>::min()) {
+        legal_sum = 1.0f;
+    }
 
     for (const auto& node : nodelist) {
-        auto vtx = new UCTNode(node.second, node.first, init_eval);
+        if(node.second == FastBoard::PASS) {
+            continue;
+        }
+        bool must = node.first >= 1.0f;
+        auto vtx = new UCTNode(node.second, node.first / legal_sum, init_eval);
+        if(must) {
+            vtx->set_must();
+        }
         link_child(vtx);
         childrenadded++;
     }

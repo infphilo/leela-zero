@@ -42,7 +42,9 @@ public:
     void newNetwork(const QString& net) {
         QMutexLocker locker(&m_mutex);
         m_state = NET_CHANGE;
-        m_network = net;
+	// DK - debugging purposes
+	m_network = "../leelaz-model.txt";
+        // m_network = net;
     }
     void run() override;
 

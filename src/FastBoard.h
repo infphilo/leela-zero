@@ -25,6 +25,9 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <assert.h>
+
+const static int DK_num_stone = 3;
 
 class FastBoard {
     friend class FastState;
@@ -79,6 +82,39 @@ public:
     void set_square(int x, int y, square_t content);
     void set_square(int vertex, square_t content);
     std::pair<int, int> get_xy(int vertex) const;
+    
+    // DK - five mok win
+    bool win(int vertex) const {
+        std::pair<int, int> pos = get_xy(vertex);
+        square_t color = get_square(pos.first, pos.second);
+        assert(color == BLACK || color == WHITE);
+        
+        int dir[4][2][2] = {
+            {{-1,  0}, {1,  0}},
+            {{ 0, -1}, {0,  1}},
+            {{-1, -1}, {1,  1}},
+            {{-1,  1}, {1, -1}}};
+        for(int i = 0; i < 4; i++) {
+            int count = 1;
+            for(int j = 0; j < 2; j++) {
+                std::pair<int, int> tpos = pos;
+                tpos.first += dir[i][j][0];
+                tpos.second += dir[i][j][1];
+                while(tpos.first  >= 0 && tpos.first < MAXBOARDSIZE &&
+                      tpos.second >= 0 && tpos.second < MAXBOARDSIZE) {
+                    square_t tcolor = get_square(tpos.first, tpos.second);
+                    if(tcolor != color) break;
+                    count += 1;
+                    tpos.first += dir[i][j][0];
+                    tpos.second += dir[i][j][1];
+                }
+            }
+            if(count >= DK_num_stone)
+                return true;
+        }
+
+        return false;
+    }
 
     bool is_suicide(int i, int color);
     int count_pliberties(const int i);

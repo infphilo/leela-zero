@@ -295,6 +295,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
             || command.find("resign") != std::string::npos) {
             game.play_pass();
             gtp_printf(id, "");
+            return false;
         } else {
             std::istringstream cmdstream(command);
             std::string tmp;
@@ -313,14 +314,25 @@ bool GTP::execute(GameState & game, std::string xinput) {
             } else {
                 gtp_fail_printf(id, "syntax not understood");
             }
+            
+            // DK - debugging purposes
+            if(game.win()) {
+                std::cerr << color << " wins!\n";
+            }
+            return true;
         }
-        return true;
     } else if (command.find("genmove") == 0) {
         std::istringstream cmdstream(command);
         std::string tmp;
 
         cmdstream >> tmp;  // eat genmove
         cmdstream >> tmp;
+        
+        // DK - 5-mok
+        if(game.win()) {
+            gtp_printf(id, "resign");
+            return false;
+        }
 
         if (!cmdstream.fail()) {
             int who;

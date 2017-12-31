@@ -255,7 +255,7 @@ void Training::process_game(GameState& state, size_t& train_pos, int who_won,
 
             step.probabilities.resize((19 * 19) + 1);
             step.probabilities[this_move] = 1.0f;
-
+            
             train_pos++;
             m_data.emplace_back(step);
         }

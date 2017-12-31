@@ -18,6 +18,7 @@
 
 #include "config.h"
 
+#include <iostream>
 #include <assert.h>
 #include <limits.h>
 #include <cmath>
@@ -75,14 +76,24 @@ SearchResult UCTSearch::play_simulation(GameState & currstate, UCTNode* const no
 
     if (node->has_children() && !result.valid()) {
         auto next = node->uct_select_child(color);
-
         if (next != nullptr) {
             auto move = next->get_move();
-
             if (move != FastBoard::PASS) {
                 currstate.play_move(move);
-
-                if (!currstate.superko()) {
+                // DK
+                if(next->must()) {
+                    // DK - debugging purposes
+                    if(currstate.get_movenum() >= 4 && false) {
+                        std::pair<int, int> pos = currstate.board.get_xy(move);
+                        std::cerr << currstate.get_movenum() << ": (" << "abcdefghjklmnopqrst"[pos.first] << ", " << pos.second + 1 << ")\n";
+                        int kk = 20;
+                        kk += 20;
+                    }
+                    if(color == FastBoard::BLACK)
+                        result = SearchResult::from_eval(1.0f);
+                    else
+                        result = SearchResult::from_eval(0.0f);
+                } else if(!currstate.superko()) {
                     result = play_simulation(currstate, next);
                 } else {
                     next->invalidate();

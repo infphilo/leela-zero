@@ -52,7 +52,7 @@ static void parse_commandline(int argc, char *argv[], bool & gtp_mode) {
         ("help,h", "Show commandline options.")
         ("gtp,g", "Enable GTP mode.")
         ("threads,t", po::value<int>()->default_value
-                      (std::min(2, cfg_num_threads)),
+                      (std::min(1, cfg_num_threads)),
                       "Number of threads to use.")
         ("playouts,p", po::value<int>(),
                        "Weaken engine by limiting the number of playouts. "
@@ -264,7 +264,8 @@ int main (int argc, char *argv[]) {
     auto maingame = std::make_unique<GameState>();
 
     /* set board limits */
-    float komi = 7.5;
+    // DK
+    float komi = 0;
     maingame->init_game(19, komi);
 
     for(;;) {
@@ -272,6 +273,23 @@ int main (int argc, char *argv[]) {
             maingame->display_state();
             std::cout << "Leela: ";
         }
+        
+        // DK - debugging purposes
+#if 0
+        for(int i = 0; i < 400; i++) {
+            maingame->display_state();
+            std::string gtp_cmd = "";
+            std::cout << "Leela: ";
+            if(i % 2 == FastBoard::BLACK) {
+                gtp_cmd = "genmove b";
+            } else {
+                gtp_cmd = "genmove w";
+            }
+            if(!GTP::execute(*maingame, gtp_cmd)) {
+                break;
+            }
+        }
+#endif
 
         if (std::getline(std::cin, input)) {
             Utils::log_input(input);

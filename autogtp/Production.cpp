@@ -91,11 +91,14 @@ void ProductionWorker::run() {
 void ProductionWorker::init(const QString& gpuIndex,
                             const QString& net,
                             QAtomicInt* movesMade) {
-    m_option = " -g -t 1 -q -d -n -m 30 -w ";
+    m_option = " -g -t 1 -q -d -n -w ";
     if (!gpuIndex.isEmpty()) {
         m_option.prepend(" --gpu=" + gpuIndex + " ");
     }
-    m_network = net;
+
+    // DK - debugging purposes
+    m_network = "../leelaz-model.txt";
+    // m_network = net;
     m_movesMade = movesMade;
     m_state = RUNNING;
 }
@@ -147,7 +150,7 @@ bool Production::updateNetwork() {
 void Production::startGames() {
     m_start = std::chrono::high_resolution_clock::now();
     m_mainMutex->lock();
-    updateNetwork();
+    // updateNetwork();
     QString myGpu;
     for(int gpu = 0; gpu < m_gpus; ++gpu) {
         for(int game = 0; game < m_games; ++game) {
@@ -201,6 +204,8 @@ void  Production::printTimingInfo(float duration) {
 
 
 bool Production::fetchBestNetworkHash() {
+  // DK - debugging purposes
+  return true;
     QString prog_cmdline("curl");
 #ifdef WIN32
     prog_cmdline.append(".exe");
@@ -248,6 +253,8 @@ bool Production::fetchBestNetworkHash() {
 }
 
 bool Production::networkExists() {
+  // DK - debugging purposes
+  return true;
     if (QFileInfo::exists(m_network)) {
         QFile f(m_network);
         if (f.open(QFile::ReadOnly)) {
@@ -278,6 +285,8 @@ bool Production::networkExists() {
 }
 
 void Production::fetchBestNetwork() {
+  // DK - debugging purposes
+  return;
     if (networkExists()) {
         QTextStream(stdout) << "Already downloaded network." << endl;
         return;
@@ -359,6 +368,10 @@ void Production::uploadData(const QString& file) {
             QFile(data_file).copy(m_debugPath + '/' + data_file);
             QFile(debug_data_file).copy(m_debugPath + '/' + debug_data_file);
         }
+
+	// DK - debugging purposes
+#if 0
+	
         // Gzip up the sgf too
 #ifdef WIN32
         QProcess::execute("gzip.exe " + sgf_file);
@@ -386,9 +399,11 @@ void Production::uploadData(const QString& file) {
             QTextStream(stdout) << "Continuing..." << endl;
         }
 
+
         QByteArray output = curl.readAllStandardOutput();
         QString outstr(output);
         QTextStream(stdout) << outstr;
+#endif
         dir.remove(sgf_file);
         dir.remove(data_file);
         dir.remove(debug_data_file);

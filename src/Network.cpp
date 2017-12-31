@@ -565,6 +565,8 @@ void Network::gather_features(GameState * state, NNPlanes & planes) {
     for (size_t h = 0; h < backtracks; h++) {
         state->forward_move();
     }
+    // DK - has to fix this
+    state->set_to_move(to_move);
 }
 
 int Network::rotate_nn_idx(const int vertex, int symmetry) {

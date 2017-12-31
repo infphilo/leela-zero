@@ -1,11 +1,15 @@
 src/leelaz -g -q -n -d -m 30 -r 0 --weights weights.txt -p 1000 --noponder
 
 src/leelaz -n -d -m 30 -r 0 --weights weights.txt -p 1000 --noponder
+	   -g GTP mode
 	   -n Enable policy network randomization.
 	   -d Don't use heuristics for smarter passing.
 	   -m 30 Play more randomly the first x moves.
 	   -r 0 Resign when winrate is less than x%.
 	   -p 1000 Weaken engine by limiting the number of playouts.
+
+src/leelaz
+	dump_supervised sgffile.sgf train.txt
 
 
 https://www.gnu.org/software/gnugo/gnugo_19.html	

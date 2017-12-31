@@ -43,6 +43,13 @@ public:
     void set_to_move(int tomove);
     void set_passes(int val);
     void increment_passes();
+    
+    // DK - 5-mok win
+    bool win() const {
+        if(m_lastmove.size() <= 0 || m_lastmove[0] <= 0)
+            return false;
+        return board.win(m_lastmove[0]);
+    }
 
     int estimate_mc_score();
     float final_score();

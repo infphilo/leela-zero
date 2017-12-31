@@ -119,10 +119,12 @@ int FullBoard::update_board(const int color, const int i, bool &capture) {
 
     /* update neighbor liberties (they all lose 1) */
     add_neighbour(i, color);
-
+    
+    // DK - no capture for 5-mok
+# if 0
     /* did we play into an opponent eye? */
     int eyeplay = (m_neighbours[i] & s_eyemask[!color]);
-
+    
     int captured_sq;
     int captured_stones = 0;
 
@@ -152,12 +154,15 @@ int FullBoard::update_board(const int color, const int i, bool &capture) {
     m_hash ^= Zobrist::zobrist_pris[color][m_prisoners[color]];
     m_prisoners[color] += captured_stones;
     m_hash ^= Zobrist::zobrist_pris[color][m_prisoners[color]];
+#endif
 
     /* move last vertex in list to our position */
     int lastvertex = m_empty[--m_empty_cnt];
     m_empty_idx[lastvertex] = m_empty_idx[i];
     m_empty[m_empty_idx[i]] = lastvertex;
 
+    // DK - no capture
+#if 0
     /* check whether we still live (i.e. detect suicide) */
     if (m_libs[m_parent[i]] == 0) {
         assert(captured_stones == 0);
@@ -171,6 +176,7 @@ int FullBoard::update_board(const int color, const int i, bool &capture) {
             return captured_sq;
         }
     }
+#endif
 
     return -1;
 }
