@@ -112,7 +112,7 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     auto to_move = state.board.get_to_move();
     
     // DK - just random score, only for the first time
-#if 0
+#if 1
     float sum = 0.0f;
     for (auto& node : raw_netlist.first) {
         if(node.second == FastBoard::PASS) {
@@ -142,6 +142,7 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     for (auto& node : raw_netlist.first) {
         auto vertex = node.second;
         // DK
+#if 1
         if (vertex != FastBoard::PASS && board.get_square(vertex) == FastBoard::EMPTY) {
             std::pair<int, int> pos = board.get_xy(vertex);
             int dir[4][2][2] = {
@@ -183,6 +184,7 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
                 }
             }
         }
+#endif
         nodelist.emplace_back(node);
         legal_sum += node.first;
     }
@@ -490,7 +492,9 @@ UCTNode* UCTNode::uct_select_child(int color) {
             best = child;
             
             // DK - debugging purposes
-            // std::cerr << "\t" << child->get_move() << " - win: " << winrate << ", psa: " << psa << ", value: " << value << std::endl;
+#if 0
+            std::cerr << "\t" << child->get_move() << " - win: " << winrate << ", score: " << psa << " " << numerator << "/" << denom - 1 << ", value: " << value << std::endl;
+#endif
         }
 
         child = child->m_nextsibling;
@@ -499,6 +503,11 @@ UCTNode* UCTNode::uct_select_child(int color) {
             child = child->m_nextsibling;
         }
     }
+    
+    // DK - debugging purposes
+#if 0
+    std::cerr << "\t\tbest" << std::endl;
+#endif
 
     assert(best != nullptr);
 

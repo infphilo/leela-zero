@@ -426,12 +426,12 @@ bool GTP::execute(GameState & game, std::string xinput) {
         }
         return true;
     } else if (command.find("final_score") == 0) {
-        float ftmp = game.final_score();
         /* white wins */
-        if (ftmp < -0.1) {
-            gtp_printf(id, "W+%3.1f", (float)fabs(ftmp));
-        } else if (ftmp > 0.1) {
-            gtp_printf(id, "B+%3.1f", ftmp);
+        float score = game.final_score();
+        if(score < -0.1f) {
+            gtp_printf(id, "W+1.0");
+        } else if(score > 0.1f) {
+            gtp_printf(id, "B+1.0");
         } else {
             gtp_printf(id, "0");
         }

@@ -50,6 +50,12 @@ public:
             return false;
         return board.win(m_lastmove[0]);
     }
+    
+    FastBoard::square_t winner() const {
+        if(!win())
+            return FastBoard::EMPTY;
+        return board.get_square(m_lastmove[0]);
+    }
 
     int estimate_mc_score();
     float final_score();

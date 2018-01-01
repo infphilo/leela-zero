@@ -338,7 +338,7 @@ std::vector<bool> FastBoard::calc_reach_color(int col) {
 
 // Needed for scoring passed out games not in MC playouts
 float FastBoard::area_score(float komi) {
-    auto score = -komi;
+    auto score = 0.0f;
 
     // DK - area score
     for (int a = 0; a < m_boardsize; a++) {
@@ -346,7 +346,7 @@ float FastBoard::area_score(float komi) {
             std::pair<int, int> pos(a, b);
             square_t color = get_square(a, b);
             if(color != BLACK && color != WHITE)
-                break;
+                continue;
             
             int dir[4][2][2] = {
                 {{-1,  0}, {1,  0}},
@@ -354,39 +354,28 @@ float FastBoard::area_score(float komi) {
                 {{-1, -1}, {1,  1}},
                 {{-1,  1}, {1, -1}}};
             for(int i = 0; i < 4; i++) {
-                int count = 1, vcount = 1;
+                int count = 1;
                 for(int j = 0; j < 2; j++) {
                     std::pair<int, int> tpos = pos;
                     tpos.first += dir[i][j][0];
                     tpos.second += dir[i][j][1];
-                    bool discontinue = false;
                     while(tpos.first  >= 0 && tpos.first < MAXBOARDSIZE &&
                           tpos.second >= 0 && tpos.second < MAXBOARDSIZE) {
                         square_t tcolor = get_square(tpos.first, tpos.second);
-                        if(tcolor != color) {
-                            discontinue = true;
-                            if(tcolor != EMPTY)
-                                break;
-                        }
-                        if(!discontinue) {
-                            count += 1;
-                        }
-                        vcount += 1;
+                        if(tcolor != color)
+                            break;
+                        count += 1;
                         tpos.first += dir[i][j][0];
                         tpos.second += dir[i][j][1];
                     }
                 }
-                if(vcount < DK_num_stone)
+                if(count < DK_num_stone)
                     continue;
 
                 if(color == WHITE) {
-                    score -= float(count);
-                    if(count >= DK_num_stone)
-                        score -= 10000.0f;
+                    return -1.0f;
                 } else {
-                    score += float(count);
-                    if(count >= DK_num_stone)
-                        score -= 10000.0f;
+                    return 1.0f;
                 }
             }
         }

@@ -19,6 +19,7 @@
 #include "config.h"
 
 #include <iostream>
+#include <iomanip>
 #include <assert.h>
 #include <limits.h>
 #include <cmath>
@@ -107,7 +108,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate, UCTNode* const no
     }
 
     if (result.valid()) {
-        node->update(color == FastBoard::BLACK ? result.eval() : 1.0f - result.eval());
+        node->update(result.eval());
     }
     node->virtual_loss_undo();
     TTable::get_TT()->update(hash, komi, node);
@@ -362,11 +363,46 @@ int UCTSearch::think(int color, passflag_t passflag) {
     }
     
     // DK - debugging purposes
-#if 1
+#if 0
     UCTNode* temp = m_root.get_first_child();
+    std::pair<int, int> ranks[19][19];
+    for(int y = 0; y < 19; y++) {
+        for(int x = 0; x < 19; x++) {
+            ranks[y][x] = std::make_pair<int, int>(0, 0);
+        }
+    }
+    int rank = 1;
     while (temp != NULL) {
-        std::cerr << m_rootstate.move_to_text(temp->get_move()) << ": " << temp->get_score() << std::endl;
+        std::pair<int, int> pos = m_rootstate.board.get_xy(temp->get_move());
+        int x = pos.first, y = pos.second;
+        ranks[y][x] = std::make_pair<int, int>(rank++, (int)(temp->get_score() * 10000));
         temp = temp->get_sibling();
+    }
+    
+    std::cerr << "   ";
+    for(int x = 0; x < 19; x++) {
+        std::cerr << std::setw(4) << "abcdefghjklmnopqrst"[x] << " ";
+    }
+    std::cerr << std::endl;
+    for(int y = 0; y < 19; y++) {
+        std::cerr << std::setw(2) << 19 - y << " ";
+        for(int x = 0; x < 19; x++) {
+            std::cerr << std::setw(4) << ranks[19 - y - 1][x].first << " ";
+        }
+        std::cerr << "\n";
+    }
+    std::cerr << "\n\n";
+    std::cerr << "   ";
+    for(int x = 0; x < 19; x++) {
+        std::cerr << std::setw(4) << "abcdefghjklmnopqrst"[x] << " ";
+    }
+    std::cerr << std::endl;
+    for(int y = 0; y < 19; y++) {
+        std::cerr << std::setw(2) << 19 - y << " ";
+        for(int x = 0; x < 19; x++) {
+            std::cerr << std::setw(4) << ranks[19 - y - 1][x].second << " ";
+        }
+        std::cerr << "\n";
     }
 #endif
 
