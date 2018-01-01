@@ -79,21 +79,22 @@ SearchResult UCTSearch::play_simulation(GameState & currstate, UCTNode* const no
         if (next != nullptr) {
             auto move = next->get_move();
             if (move != FastBoard::PASS) {
-                currstate.play_move(move);
-                // DK
-                if(next->must()) {
-                    // DK - debugging purposes
-                    if(currstate.get_movenum() >= 4 && false) {
-                        std::pair<int, int> pos = currstate.board.get_xy(move);
-                        std::cerr << currstate.get_movenum() << ": (" << "abcdefghjklmnopqrst"[pos.first] << ", " << pos.second + 1 << ")\n";
+                // DK - debugging purposes
+                if(currstate.get_movenum() >= 4 && false) {
+                    std::pair<int, int> pos = currstate.board.get_xy(move);
+                    for(int s = 0; s < currstate.get_movenum(); s++) {
+                        std::cerr << " ";
+                    }
+                    std::cerr << currstate.get_movenum() << ": " << currstate.board.move_to_text(move) << " (" << pos.first << ", " << pos.second << ": " << move << ")" << std::endl;
+                    if(currstate.get_movenum() == 2 &&
+                       pos.first >= 8 && pos.first <= 10 &&
+                       pos.second >= 8 && pos.second <= 10) {
                         int kk = 20;
                         kk += 20;
                     }
-                    if(color == FastBoard::BLACK)
-                        result = SearchResult::from_eval(1.0f);
-                    else
-                        result = SearchResult::from_eval(0.0f);
-                } else if(!currstate.superko()) {
+                }
+                currstate.play_move(move);
+                if(!currstate.superko()) {
                     result = play_simulation(currstate, next);
                 } else {
                     next->invalidate();
@@ -106,7 +107,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate, UCTNode* const no
     }
 
     if (result.valid()) {
-        node->update(result.eval());
+        node->update(color == FastBoard::BLACK ? result.eval() : 1.0f - result.eval());
     }
     node->virtual_loss_undo();
     TTable::get_TT()->update(hash, komi, node);
@@ -359,6 +360,15 @@ int UCTSearch::think(int color, passflag_t passflag) {
     if (cfg_noise) {
         m_root.dirichlet_noise(0.25f, 0.03f);
     }
+    
+    // DK - debugging purposes
+#if 1
+    UCTNode* temp = m_root.get_first_child();
+    while (temp != NULL) {
+        std::cerr << m_rootstate.move_to_text(temp->get_move()) << ": " << temp->get_score() << std::endl;
+        temp = temp->get_sibling();
+    }
+#endif
 
     myprintf("NN eval=%f\n",
              (color == FastBoard::BLACK ? root_eval : 1.0f - root_eval));

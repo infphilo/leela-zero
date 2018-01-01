@@ -107,8 +107,12 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
         }
     }
     
+    // DCNN returns winrate as side to move
+    auto net_eval = raw_netlist.second;
+    auto to_move = state.board.get_to_move();
+    
     // DK - just random score, only for the first time
-#if 1
+#if 0
     float sum = 0.0f;
     for (auto& node : raw_netlist.first) {
         if(node.second == FastBoard::PASS) {
@@ -121,11 +125,10 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     for (auto& node : raw_netlist.first) {
         node.first /= sum;
     }
+    
+    net_eval = 0.5f;
 #endif
     
-    // DCNN returns winrate as side to move
-    auto net_eval = raw_netlist.second;
-    auto to_move = state.board.get_to_move();
     // our search functions evaluate from black's point of view
     if (to_move == FastBoard::WHITE) {
         net_eval = 1.0f - net_eval;
@@ -408,13 +411,10 @@ float UCTNode::get_eval(int tomove) const {
     // Due to the use of atomic updates and virtual losses, it is
     // possible for the visit count to change underneath us. Make sure
     // to return a consistent result to the caller by caching the values.
-    auto virtual_loss = int{m_virtual_loss};
-    auto visits = get_visits() + virtual_loss;
+    //auto virtual_loss = int{m_virtual_loss};
+    auto visits = get_visits(); // + virtual_loss;
     if (visits > 0) {
         auto blackeval = get_blackevals();
-        if (tomove == FastBoard::WHITE) {
-            blackeval += static_cast<double>(virtual_loss);
-        }
         auto score = static_cast<float>(blackeval / (double)visits);
         if (tomove == FastBoard::WHITE) {
             score = 1.0f - score;
@@ -488,6 +488,9 @@ UCTNode* UCTNode::uct_select_child(int color) {
         if (value > best_value) {
             best_value = value;
             best = child;
+            
+            // DK - debugging purposes
+            // std::cerr << "\t" << child->get_move() << " - win: " << winrate << ", psa: " << psa << ", value: " << value << std::endl;
         }
 
         child = child->m_nextsibling;
