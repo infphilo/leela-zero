@@ -112,7 +112,7 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     auto to_move = state.board.get_to_move();
     
     // DK - just random score, only for the first time
-#if 1
+#if 0
     float sum = 0.0f;
     for (auto& node : raw_netlist.first) {
         if(node.second == FastBoard::PASS) {
@@ -142,7 +142,6 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     for (auto& node : raw_netlist.first) {
         auto vertex = node.second;
         // DK
-#if 1
         if (vertex != FastBoard::PASS && board.get_square(vertex) == FastBoard::EMPTY) {
             std::pair<int, int> pos = board.get_xy(vertex);
             int dir[4][2][2] = {
@@ -184,7 +183,6 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
                 }
             }
         }
-#endif
         nodelist.emplace_back(node);
         legal_sum += node.first;
     }

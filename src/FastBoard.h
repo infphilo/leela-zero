@@ -27,7 +27,7 @@
 #include <queue>
 #include <assert.h>
 
-const static int DK_num_stone = 3;
+const static int DK_num_stone = 5;
 
 class FastBoard {
     friend class FastState;
