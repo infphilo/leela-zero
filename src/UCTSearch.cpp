@@ -117,7 +117,7 @@ SearchResult UCTSearch::play_simulation(GameState & currstate, UCTNode* const no
 }
 
 void UCTSearch::dump_stats(KoState & state, UCTNode & parent) {
-    if (cfg_quiet || !parent.has_children()) {
+    if (cfg_quiet || !parent.has_children() || parent.get_first_child() == nullptr) {
         return;
     }
 
@@ -159,6 +159,9 @@ void UCTSearch::dump_stats(KoState & state, UCTNode & parent) {
 }
 
 int UCTSearch::get_best_move(passflag_t passflag) {
+    if(m_root.get_first_child() == nullptr) {
+        return FastBoard::PASS;
+    }
     int color = m_rootstate.board.get_to_move();
 
     // Make sure best is first
@@ -282,7 +285,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
 }
 
 std::string UCTSearch::get_pv(KoState & state, UCTNode & parent) {
-    if (!parent.has_children()) {
+    if (!parent.has_children() || parent.get_first_child() == nullptr) {
         return std::string();
     }
 
@@ -434,6 +437,7 @@ int UCTSearch::think(int color, passflag_t passflag) {
         if (centiseconds_elapsed - last_update > 250) {
             last_update = centiseconds_elapsed;
             dump_analysis(static_cast<int>(m_playouts));
+            break;
         }
         keeprunning  = is_running();
         keeprunning &= (centiseconds_elapsed < time_for_move);

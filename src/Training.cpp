@@ -100,6 +100,9 @@ void Training::record(GameState& state, UCTNode& root) {
         Network::get_scored_moves(&state, Network::Ensemble::DIRECT, 0);
     step.net_winrate = result.second;
 
+    if(root.get_first_child() == nullptr) {
+        return;
+    }
     const auto best_node = root.get_best_root_child(step.to_move);
     if (!best_node) {
         return;
