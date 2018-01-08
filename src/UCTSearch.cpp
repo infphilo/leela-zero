@@ -65,7 +65,8 @@ SearchResult UCTSearch::play_simulation(GameState & currstate, UCTNode* const no
             result = SearchResult::from_score(score);
         } else if (m_nodes < MAX_TREE_SIZE) {
             float eval;
-            auto success = node->create_children(m_nodes, currstate, eval);
+            bool noise = false;
+            auto success = node->create_children(m_nodes, currstate, eval, noise);
             if (success) {
                 result = SearchResult::from_eval(eval);
             }
@@ -359,9 +360,10 @@ int UCTSearch::think(int color, passflag_t passflag) {
     // create a sorted list off legal moves (make sure we
     // play something legal and decent even in time trouble)
     float root_eval;
-    m_root.create_children(m_nodes, m_rootstate, root_eval);
+    bool noise = cfg_noise;
+    m_root.create_children(m_nodes, m_rootstate, root_eval, noise);
     m_root.kill_superkos(m_rootstate);
-    if (cfg_noise) {
+    if (cfg_noise && noise) {
         m_root.dirichlet_noise(0.25f, 0.03f);
     }
     

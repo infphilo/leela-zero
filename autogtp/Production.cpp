@@ -92,7 +92,7 @@ void ProductionWorker::init(const QString& gpuIndex,
                             const QString& net,
                             QAtomicInt* movesMade) {
   m_option = " -g -t 1 -q -d -n -w ";
-  // m_option = " -g -t 1 -q -d -w ";
+  //m_option = " -g -t 1 -q -d -w ";
     if (!gpuIndex.isEmpty()) {
         m_option.prepend(" --gpu=" + gpuIndex + " ");
     }

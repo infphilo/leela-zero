@@ -74,7 +74,8 @@ SMP::Mutex & UCTNode::get_mutex() {
 
 bool UCTNode::create_children(std::atomic<int> & nodecount,
                               GameState & state,
-                              float & eval) {
+                              float & eval,
+                              bool & noise) {
     // check whether somebody beat us to it (atomic)
     if (has_children()) {
         return false;
@@ -199,18 +200,19 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
                                     empty += 1;
                             }
                             if(same >= 1) {
+                                noise = false;
                                 assert(same == 1);
-                                node.first = 1.0f;
                                 if(color == to_move) {
-                                    node.first = std::max<float>(node.first, 2.0f);
+                                    node.first += 100.0f;
                                 } else {
-                                    node.first = std::max<float>(node.first, 1.4f);
+                                    node.first += 20.0f;
                                 }
                             } else if(empty >= 2) {
+                                noise = false;
                                 if(color == to_move) {
-                                    node.first = std::max<float>(node.first, 1.2f);
+                                    node.first += 4.0f;
                                 } else {
-                                    node.first = std::max<float>(node.first, 1.0f);
+                                    node.first += 0.8f;
                                 }
                             }
                         }

@@ -267,29 +267,50 @@ int main (int argc, char *argv[]) {
     // DK
     float komi = 0;
     maingame->init_game(19, komi);
+    
+    // DK - debugging purposes
+#if 0
+    for(int i = 0; i < 400; i++) {
+        maingame->display_state();
+        std::string gtp_cmd = "";
+        std::cout << "Leela: ";
+        if(i % 2 == FastBoard::BLACK) {
+            gtp_cmd = "genmove b";
+        } else {
+            gtp_cmd = "genmove w";
+        }
+        if(!GTP::execute(*maingame, gtp_cmd)) {
+            break;
+        }
+    }
+#endif
+    
+#if 0
+    std::string plays = ";B[kr];W[ic];B[kk];W[jf];B[ki];W[jh];B[ii];W[jj];B[ji];W[hi];B[jg];W[li];B[jk];W[kj];B[hj];W[ij];B[lj];W[jl];B[ik];W[hk];B[lk];W[mk];B[ll];W[lm];B[kl];W[jm];B[il];W[hm];B[km];W[kn];B[im];W[in];B[jo];W[jn];B[hn];W[ln];B[mn];W[hl];B[ho];W[mm];B[ko];W[io];B[lo];W[kp];B[hp];W[ip];B[jp];W[jq];B[ir];W[hq];B[iq];W[hr];B[kq];W[mo];B[ml];W[nl];B[ok];W[nk];B[mj];W[ni];B[nj];W[mi];B[oi];W[nm];B[nn];W[ol];B[pm];W[oj];B[pk];W[pl];B[ql];W[lh];B[kg];W[kh];B[mh];W[ih];B[hh];W[kf];B[lg];W[mg];B[ig];W[hg];B[if];W[gi];B[gh];W[gk];B[gj];W[gg];B[fj];W[ej];B[fk];W[or];B[fi];W[fl];B[fh];W[fg];B[gf];W[eh];B[di];W[ei]";
+    for(int i = 1; i < plays.length(); i += 6) {
+        maingame->display_state();
+        std::string gtp_cmd = "play";
+        if(plays[i] == 'B') {
+            gtp_cmd += " b ";
+        } else {
+            gtp_cmd += " w ";
+        }
+        gtp_cmd += "abcdefghjklmnopqrst"[plays[i+2] - 'a'];
+        char num[4];
+        sprintf(num, "%d", 19 - (plays[i+3] - 'a'));
+        gtp_cmd += std::string(num);
+        std::cerr << "Leela: " << gtp_cmd << std::endl;
+        if(!GTP::execute(*maingame, gtp_cmd)) {
+        }
+    }
+    maingame->display_state();
+#endif
 
     for(;;) {
         if (!gtp_mode) {
             maingame->display_state();
             std::cout << "Leela: ";
         }
-        
-        // DK - debugging purposes
-#if 0
-        for(int i = 0; i < 400; i++) {
-            maingame->display_state();
-            std::string gtp_cmd = "";
-            std::cout << "Leela: ";
-            if(i % 2 == FastBoard::BLACK) {
-                gtp_cmd = "genmove b";
-            } else {
-                gtp_cmd = "genmove w";
-            }
-            if(!GTP::execute(*maingame, gtp_cmd)) {
-                break;
-            }
-        }
-#endif
 
         if (std::getline(std::cin, input)) {
             Utils::log_input(input);
