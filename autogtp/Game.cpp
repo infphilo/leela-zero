@@ -34,7 +34,7 @@ Game::Game(const QString& weights, const QString& opt) :
 #endif
     m_cmdLine.append(opt);
     m_cmdLine.append(weights);
-    m_cmdLine.append(" -m 0 -p 40 --noponder");
+    m_cmdLine.append(" -m 0 -p 100 --noponder");
     m_fileName = QUuid::createUuid().toRfc4122().toHex();
 }
 
