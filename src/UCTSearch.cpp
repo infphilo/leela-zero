@@ -362,7 +362,7 @@ int UCTSearch::think(int color, passflag_t passflag) {
     float root_eval;
     bool noise = cfg_noise;
     m_root.create_children(m_nodes, m_rootstate, root_eval, noise);
-    m_root.kill_superkos(m_rootstate);
+    // m_root.kill_superkos(m_rootstate);
     if (cfg_noise && noise) {
         m_root.dirichlet_noise(0.25f, 0.03f);
     }

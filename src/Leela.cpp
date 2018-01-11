@@ -286,7 +286,7 @@ int main (int argc, char *argv[]) {
 #endif
     
 #if 0
-    std::string plays = ";B[ce];W[jm];B[ik];W[jl];B[jk];W[jn];B[jo];W[jj];B[kk];W[hk];B[lk];W[mk];B[ll];W[mm];B[km];W[ln];B[lm];W[lj];B[ki];W[kl];B[il];W[kj];B[ij];W[mj];B[nj];W[ml]";
+    std::string plays = ";B[bh];W[go];B[qk];W[ps];B[hn];W[qb];B[ni];W[el];B[bg];W[od];B[ip];W[qs];B[jq];W[ae];B[jp];W[ja];B[be]";
     for(int i = 1; i < plays.length(); i += 6) {
         maingame->display_state();
         std::string gtp_cmd = "play";
