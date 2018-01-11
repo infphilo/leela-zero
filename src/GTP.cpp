@@ -309,7 +309,8 @@ bool GTP::execute(GameState & game, std::string xinput) {
                 if (!game.play_textmove(color, vertex)) {
                     gtp_fail_printf(id, "illegal move");
                 } else {
-                    gtp_printf(id, "");
+                    //gtp_printf(id, "");
+                    gtp_printf(id, "%s", vertex.c_str());
                 }
             } else {
                 gtp_fail_printf(id, "syntax not understood");

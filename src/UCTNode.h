@@ -44,7 +44,8 @@ public:
     bool has_children() const;
     bool create_children(std::atomic<int> & nodecount,
                          GameState & state, float & eval,
-                         bool & noise);
+                         bool & noise,
+                         bool root = false);
     float eval_state(GameState& state);
     void kill_superkos(KoState & state);
     void delete_child(UCTNode * child);
@@ -74,9 +75,6 @@ public:
     void sort_root_children(int color);
     UCTNode* get_best_root_child(int color);
     SMP::Mutex & get_mutex();
-    
-    void set_must() { m_must = true; }
-    bool must() const { return m_must; }
 
 private:
     UCTNode();

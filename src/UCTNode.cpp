@@ -75,7 +75,8 @@ SMP::Mutex & UCTNode::get_mutex() {
 bool UCTNode::create_children(std::atomic<int> & nodecount,
                               GameState & state,
                               float & eval,
-                              bool & noise) {
+                              bool & noise,
+                              bool root) {
     // check whether somebody beat us to it (atomic)
     if (has_children()) {
         return false;
@@ -139,11 +140,10 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     FastBoard & board = state.board;
     std::vector<Network::scored_node> nodelist;
 
-    auto legal_sum = 0.0f;
     for (auto& node : raw_netlist.first) {
         auto vertex = node.second;
         // DK
-        if (vertex != FastBoard::PASS && board.get_square(vertex) == FastBoard::EMPTY) {
+        if (root && vertex != FastBoard::PASS && board.get_square(vertex) == FastBoard::EMPTY) {
             std::pair<int, int> pos = board.get_xy(vertex);
             int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
             for(int c = 0; c < 2; c++) {
@@ -201,7 +201,6 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
                             }
                             if(same >= 1) {
                                 noise = false;
-                                assert(same == 1);
                                 if(color == to_move) {
                                     node.first += 100.0f;
                                 } else {
@@ -221,19 +220,8 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
             }
         }
         nodelist.emplace_back(node);
-        legal_sum += node.first;
     }
-
-    // If the sum is 0 or a denormal, then don't try to normalize.
-    /*
-    if (legal_sum > std::numeric_limits<float>::min()) {
-        // re-normalize after removing illegal moves.
-        for (auto& node : nodelist) {
-            node.first /= legal_sum;
-        }
-    }
-     */
-
+    
     link_nodelist(nodecount, nodelist, net_eval);
 
     return true;
@@ -269,11 +257,7 @@ void UCTNode::link_nodelist(std::atomic<int> & nodecount,
         if(node.second == FastBoard::PASS) {
             continue;
         }
-        bool must = node.first >= 1.0f;
         auto vtx = new UCTNode(node.second, node.first / legal_sum, init_eval);
-        if(must) {
-            vtx->set_must();
-        }
         link_child(vtx);
         childrenadded++;
     }

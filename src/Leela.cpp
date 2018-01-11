@@ -286,7 +286,7 @@ int main (int argc, char *argv[]) {
 #endif
     
 #if 0
-    std::string plays = ";B[bh];W[go];B[qk];W[ps];B[hn];W[qb];B[ni];W[el];B[bg];W[od];B[ip];W[qs];B[jq];W[ae];B[jp];W[ja];B[be]";
+    std::string plays = ";B[oa];W[eh];B[kj];W[rs];B[fk];W[cb];B[go];W[jm];B[gh];W[fe];B[hh];W[kl];B[mg];W[hk];B[ci];W[ks];B[jh];W[ih];B[kq];W[is];B[mf];W[ap];B[mj];W[er];B[en];W[ni];B[ol];W[pg];B[dq];W[eo];B[gk];W[ra];B[gl];W[oh];B[jq];W[dk];B[jo];W[rk];B[ec];W[po];B[ak];W[mm];B[hn];W[fn];B[hf];W[da];B[he]";
     for(int i = 1; i < plays.length(); i += 6) {
         maingame->display_state();
         std::string gtp_cmd = "play";
@@ -302,6 +302,9 @@ int main (int argc, char *argv[]) {
         std::cerr << "Leela: " << gtp_cmd << std::endl;
         if(!GTP::execute(*maingame, gtp_cmd)) {
         }
+    }
+    maingame->display_state();
+    if(!GTP::execute(*maingame, "genmove w")) {
     }
     maingame->display_state();
 #endif
