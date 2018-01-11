@@ -34,7 +34,7 @@ Game::Game(const QString& weights, const QString& opt) :
 #endif
     m_cmdLine.append(opt);
     m_cmdLine.append(weights);
-    m_cmdLine.append(" -m 0 -p 1000 --noponder");
+    m_cmdLine.append(" -m 1 -p 1000 --noponder");
     m_fileName = QUuid::createUuid().toRfc4122().toHex();
 }
 
@@ -158,13 +158,35 @@ bool Game::gameStart(const VersionTuple &min_version) {
 }
 
 void Game::move() {
-    m_moveNum++;
+#if 0
+  std::string plays = ";B[oa];W[eh];B[kj];W[rs];B[fk];W[cb];B[go];W[jm];B[gh];W[fe];B[hh];W[kl];B[mg];W[hk];B[ci];W[ks];B[jh];W[ih];B[kq];W[is];B[mf];W[ap];B[mj];W[er];B[en];W[ni];B[ol];W[pg];B[dq];W[eo];B[gk];W[ra];B[gl];W[oh];B[jq];W[dk];B[jo];W[rk];B[ec];W[po];B[ak];W[mm];B[hn];W[fn];B[hf];W[da];B[he]";
+
+  //B[he];W[lo];B[hg];W[hd];B[hi]
+
+#else
+  std::string plays = "";
+#endif
     QString moveCmd;
-    if (m_blackToMove) {
-        moveCmd = "genmove b\n";
+    if(m_moveNum * 6 < plays.length()) {
+      moveCmd = "play";
+      if(plays[m_moveNum * 6 + 1] == 'B') {
+	moveCmd += " b ";
+      } else {
+	moveCmd += " w ";
+      }
+      moveCmd += "abcdefghjklmnopqrst"[plays[m_moveNum * 6 + 3] - 'a'];
+      char num[4];
+      sprintf(num, "%d", 19 - (plays[m_moveNum * 6 + 4] - 'a'));
+      moveCmd += num;
+      moveCmd += "\n";
     } else {
+      if (m_blackToMove) {
+        moveCmd = "genmove b\n";
+      } else {
         moveCmd = "genmove w\n";
+      }
     }
+    m_moveNum++;
     write(qPrintable(moveCmd));
     waitForBytesWritten(-1);
 }

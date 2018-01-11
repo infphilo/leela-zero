@@ -75,8 +75,7 @@ SMP::Mutex & UCTNode::get_mutex() {
 bool UCTNode::create_children(std::atomic<int> & nodecount,
                               GameState & state,
                               float & eval,
-                              bool & noise,
-                              bool root) {
+                              bool & noise) {
     // check whether somebody beat us to it (atomic)
     if (has_children()) {
         return false;
@@ -143,7 +142,8 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     for (auto& node : raw_netlist.first) {
         auto vertex = node.second;
         // DK
-        if (root && vertex != FastBoard::PASS && board.get_square(vertex) == FastBoard::EMPTY) {
+#if 0
+        if (vertex != FastBoard::PASS && board.get_square(vertex) == FastBoard::EMPTY) {
             std::pair<int, int> pos = board.get_xy(vertex);
             int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
             for(int c = 0; c < 2; c++) {
@@ -203,15 +203,19 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
                                 noise = false;
                                 if(color == to_move) {
                                     node.first += 100.0f;
+                                    net_eval = color == FastBoard::BLACK ? 1.0f : 0.0f;
                                 } else {
                                     node.first += 20.0f;
+                                    net_eval = color == FastBoard::BLACK ? 0.99f : 0.01f;
                                 }
                             } else if(empty >= 2) {
                                 noise = false;
                                 if(color == to_move) {
                                     node.first += 4.0f;
+                                    net_eval = color == FastBoard::BLACK ? 0.98f : 0.02f;
                                 } else {
                                     node.first += 0.8f;
+                                    net_eval = color == FastBoard::BLACK ? 0.97f : 0.03f;
                                 }
                             }
                         }
@@ -219,6 +223,7 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
                 }
             }
         }
+#endif
         nodelist.emplace_back(node);
     }
     

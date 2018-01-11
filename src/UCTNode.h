@@ -44,8 +44,7 @@ public:
     bool has_children() const;
     bool create_children(std::atomic<int> & nodecount,
                          GameState & state, float & eval,
-                         bool & noise,
-                         bool root = false);
+                         bool & noise);
     float eval_state(GameState& state);
     void kill_superkos(KoState & state);
     void delete_child(UCTNode * child);
