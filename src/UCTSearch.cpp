@@ -178,7 +178,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
     int bestmove = m_root.get_first_child()->get_move();
     
     // DK - better move than bestmove above
-#if 1
+#if 0
     float best_winrate = 0.0f;
     for(int x = 0; x < 19; x++) {
         for(int y = 0; y < 19; y++) {
