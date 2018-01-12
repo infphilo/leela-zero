@@ -163,10 +163,10 @@ int UCTSearch::get_best_move(passflag_t passflag) {
     if(m_root.get_first_child() == nullptr) {
         return FastBoard::PASS;
     }
-    int color = m_rootstate.board.get_to_move();
+    int to_move = m_rootstate.board.get_to_move();
 
     // Make sure best is first
-    m_root.sort_root_children(color);
+    m_root.sort_root_children(to_move);
 
     // Check whether to randomize the best move proportional
     // to the playout counts, early game only.
@@ -176,6 +176,106 @@ int UCTSearch::get_best_move(passflag_t passflag) {
     }
 
     int bestmove = m_root.get_first_child()->get_move();
+    
+    // DK - better move than bestmove above
+#if 1
+    float best_winrate = 0.0f;
+    auto child = m_root.get_first_child();
+    while (child != nullptr) {
+        int vertex = child->get_move();
+        if (vertex != FastBoard::PASS && m_rootstate.board.get_square(vertex) == FastBoard::EMPTY) {
+            std::pair<int, int> pos = m_rootstate.board.get_xy(vertex);
+            int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
+            float winrate = 0.0f;
+            for(int c = 0; c < 2; c++) {
+                FastBoard::square_t color = (c == 0 ? FastBoard::BLACK : FastBoard::WHITE);
+                for(int i = 0; i < 4; i++) {
+                    for(int j = 0; j < DK_num_stone - 1; j++) {
+                        std::pair<int, int> begin_pos = pos;
+                        begin_pos.first += (dir[i][0] * -j);
+                        begin_pos.second += (dir[i][1] * -j);
+                        std::pair<int, int> tmp_pos = begin_pos;
+                        int count = 0;
+                        for(int s = 0; s < DK_num_stone - 1; s++) {
+                            if(tmp_pos.first < 0 ||
+                               tmp_pos.first >= FastBoard::MAXBOARDSIZE ||
+                               tmp_pos.second < 0 ||
+                               tmp_pos.second >= FastBoard::MAXBOARDSIZE)
+                                break;
+                            if(tmp_pos == pos) {
+                                count += 1;
+                            } else {
+                                FastBoard::square_t tcolor = m_rootstate.board.get_square(tmp_pos.first, tmp_pos.second);
+                                if(tcolor != color)
+                                    break;
+                                count += 1;
+                            }
+                            tmp_pos.first += dir[i][0];
+                            tmp_pos.second += dir[i][1];
+                        }
+                        
+                        if(count >= DK_num_stone - 1) {
+                            assert(count == DK_num_stone - 1);
+                            int same = 0, empty = 0;
+                            begin_pos.first -= dir[i][0];
+                            begin_pos.second -= dir[i][1];
+                            if(begin_pos.first >= 0 &&
+                               begin_pos.first < FastBoard::MAXBOARDSIZE &&
+                               begin_pos.second >= 0 &&
+                               begin_pos.second < FastBoard::MAXBOARDSIZE) {
+                                FastBoard::square_t tcolor = m_rootstate.board.get_square(begin_pos.first, begin_pos.second);
+                                if(tcolor == color)
+                                    same += 1;
+                                else if(tcolor == FastBoard::EMPTY)
+                                    empty += 1;
+                            }
+                            std::pair<int, int> end_pos = tmp_pos;
+                            if(end_pos.first >= 0 &&
+                               end_pos.first < FastBoard::MAXBOARDSIZE &&
+                               end_pos.second >= 0 &&
+                               end_pos.second < FastBoard::MAXBOARDSIZE) {
+                                FastBoard::square_t tcolor = m_rootstate.board.get_square(end_pos.first, end_pos.second);
+                                if(tcolor == color)
+                                    same += 1;
+                                else if(tcolor == FastBoard::EMPTY)
+                                    empty += 1;
+                            }
+                            if(same >= 1) {
+                                assert(same == 1);
+                                if(color == to_move) {
+                                    bestmove = vertex;
+                                    winrate = 1.0f;
+                                } else {
+                                    if(winrate < 1.0f) {
+                                        bestmove = vertex;
+                                        winrate = 0.99f;
+                                    }
+                                }
+                            } else if(empty >= 2) {
+                                if(color == to_move) {
+                                    if(winrate < 0.99f) {
+                                        bestmove = vertex;
+                                        winrate = std::max(0.98f, winrate + 0.01f);
+                                    }
+                                } else {
+                                    if(winrate < 0.98f) {
+                                        bestmove = vertex;
+                                        winrate = std::max(0.97f, winrate + 0.01f);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if(winrate >= 0.97f && winrate > best_winrate) {
+                bestmove = vertex;
+                best_winrate = winrate;
+            }
+        }
+        child = child->get_sibling();
+    }
+#endif
 
     // do we have statistics on the moves?
     if (m_root.get_first_child() != nullptr) {
@@ -184,7 +284,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
         }
     }
 
-    float bestscore = m_root.get_first_child()->get_eval(color);
+    float bestscore = m_root.get_first_child()->get_eval(to_move);
 
     // do we want to fiddle with the best move because of the rule set?
     if (passflag & UCTSearch::NOPASS) {
@@ -198,7 +298,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                 if (nopass->first_visit()) {
                     bestscore = 1.0f;
                 } else {
-                    bestscore = nopass->get_eval(color);
+                    bestscore = nopass->get_eval(to_move);
                 }
             } else {
                 myprintf("Pass is the only acceptable move.\n");
@@ -226,9 +326,9 @@ int UCTSearch::get_best_move(passflag_t passflag) {
             // removal, kgs-genmove_cleanup and the NOPASS mode must be used.
             float score = m_rootstate.final_score();
             // Do we lose by passing?
-            if ((score > 0.0f && color == FastBoard::WHITE)
+            if ((score > 0.0f && to_move == FastBoard::WHITE)
                 ||
-                (score < 0.0f && color == FastBoard::BLACK)) {
+                (score < 0.0f && to_move == FastBoard::BLACK)) {
                 myprintf("Passing loses :-(\n");
                 // Find a valid non-pass move.
                 UCTNode * nopass = m_root.get_nopass_child(m_rootstate);
@@ -238,7 +338,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                     if (nopass->first_visit()) {
                         bestscore = 1.0f;
                     } else {
-                        bestscore = nopass->get_eval(color);
+                        bestscore = nopass->get_eval(to_move);
                     }
                 } else {
                     myprintf("No alternative to passing.\n");
@@ -253,9 +353,9 @@ int UCTSearch::get_best_move(passflag_t passflag) {
             // end the game immediately?
             float score = m_rootstate.final_score();
             // do we lose by passing?
-            if ((score > 0.0f && color == FastBoard::WHITE)
+            if ((score > 0.0f && to_move == FastBoard::WHITE)
                 ||
-                (score < 0.0f && color == FastBoard::BLACK)) {
+                (score < 0.0f && to_move == FastBoard::BLACK)) {
                 myprintf("Passing loses, I'll play on.\n");
             } else {
                 myprintf("Passing wins, I'll pass out.\n");

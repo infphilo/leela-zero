@@ -136,94 +136,9 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     }
     eval = net_eval;
 
-    FastBoard & board = state.board;
     std::vector<Network::scored_node> nodelist;
 
     for (auto& node : raw_netlist.first) {
-        auto vertex = node.second;
-        // DK
-#if 0
-        if (vertex != FastBoard::PASS && board.get_square(vertex) == FastBoard::EMPTY) {
-            std::pair<int, int> pos = board.get_xy(vertex);
-            int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
-            for(int c = 0; c < 2; c++) {
-                FastBoard::square_t color = c == 0 ? FastBoard::BLACK : FastBoard::WHITE;
-                for(int i = 0; i < 4; i++) {
-                    for(int j = 0; j < DK_num_stone - 1; j++) {
-                        std::pair<int, int> begin_pos = pos;
-                        begin_pos.first += (dir[i][0] * -j);
-                        begin_pos.second += (dir[i][1] * -j);
-                        std::pair<int, int> tmp_pos = begin_pos;
-                        int count = 0;
-                        for(int s = 0; s < DK_num_stone - 1; s++) {
-                            if(tmp_pos.first < 0 ||
-                               tmp_pos.first >= FastBoard::MAXBOARDSIZE ||
-                               tmp_pos.second < 0 ||
-                               tmp_pos.second >= FastBoard::MAXBOARDSIZE)
-                                break;
-                            if(tmp_pos == pos) {
-                                count += 1;
-                            } else {
-                                FastBoard::square_t tcolor = board.get_square(tmp_pos.first, tmp_pos.second);
-                                if(tcolor != color)
-                                    break;
-                                count += 1;
-                            }
-                            tmp_pos.first += dir[i][0];
-                            tmp_pos.second += dir[i][1];
-                        }
-                        
-                        if(count >= DK_num_stone - 1) {
-                            assert(count == DK_num_stone - 1);
-                            int same = 0, empty = 0;
-                            begin_pos.first -= dir[i][0];
-                            begin_pos.second -= dir[i][1];
-                            if(begin_pos.first >= 0 &&
-                               begin_pos.first < FastBoard::MAXBOARDSIZE &&
-                               begin_pos.second >= 0 &&
-                               begin_pos.second < FastBoard::MAXBOARDSIZE) {
-                                FastBoard::square_t tcolor = board.get_square(begin_pos.first, begin_pos.second);
-                                if(tcolor == color)
-                                    same += 1;
-                                else if(tcolor == FastBoard::EMPTY)
-                                    empty += 1;
-                            }
-                            std::pair<int, int> end_pos = tmp_pos;
-                            if(end_pos.first >= 0 &&
-                               end_pos.first < FastBoard::MAXBOARDSIZE &&
-                               end_pos.second >= 0 &&
-                               end_pos.second < FastBoard::MAXBOARDSIZE) {
-                                FastBoard::square_t tcolor = board.get_square(end_pos.first, end_pos.second);
-                                if(tcolor == color)
-                                    same += 1;
-                                else if(tcolor == FastBoard::EMPTY)
-                                    empty += 1;
-                            }
-                            if(same >= 1) {
-                                noise = false;
-                                if(color == to_move) {
-                                    node.first += 100.0f;
-                                    net_eval = color == FastBoard::BLACK ? 1.0f : 0.0f;
-                                } else {
-                                    node.first += 20.0f;
-                                    net_eval = color == FastBoard::BLACK ? 0.99f : 0.01f;
-                                }
-                            } else if(empty >= 2) {
-                                noise = false;
-                                if(color == to_move) {
-                                    node.first += 4.0f;
-                                    net_eval = color == FastBoard::BLACK ? 0.98f : 0.02f;
-                                } else {
-                                    node.first += 0.8f;
-                                    net_eval = color == FastBoard::BLACK ? 0.97f : 0.03f;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-#endif
         nodelist.emplace_back(node);
     }
     
