@@ -180,11 +180,13 @@ int UCTSearch::get_best_move(passflag_t passflag) {
     // DK - better move than bestmove above
 #if 1
     float best_winrate = 0.0f;
-    auto child = m_root.get_first_child();
-    while (child != nullptr) {
-        int vertex = child->get_move();
-        if (vertex != FastBoard::PASS && m_rootstate.board.get_square(vertex) == FastBoard::EMPTY) {
+    for(int x = 0; x < 19; x++) {
+        for(int y = 0; y < 19; y++) {
+            int vertex = m_rootstate.board.get_vertex(x, y);
+            if(m_rootstate.board.get_square(vertex) != FastBoard::EMPTY)
+                continue;
             std::pair<int, int> pos = m_rootstate.board.get_xy(vertex);
+            assert(pos.first == x && pos.second == y);
             int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
             float winrate = 0.0f;
             for(int c = 0; c < 2; c++) {
@@ -273,8 +275,9 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                 best_winrate = winrate;
             }
         }
-        child = child->get_sibling();
     }
+    if(best_winrate >= 0.97f)
+        return bestmove;
 #endif
 
     // do we have statistics on the moves?
