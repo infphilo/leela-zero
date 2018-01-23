@@ -60,14 +60,14 @@ def extract_games(game_file,
 
     print >> sys.stderr, "# of games: %d, # of unique games: %d, # of transformed unique games: %d" % (len(games), len(unique_games), len(trans_unique_games))
 
-    game_keys = unique_games.keys()
+    game_keys = trans_unique_games.keys()
     random.shuffle(game_keys)
     if num_games > 0:
         game_keys = game_keys[:num_games]
 
     for game_key in game_keys:
-        assert game_key in unique_games
-        game_num = unique_games[game_key][0]
+        assert game_key in trans_unique_games
+        game_num = trans_unique_games[game_key][0]
         print games[game_num]
 
 

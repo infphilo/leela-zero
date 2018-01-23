@@ -178,7 +178,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
     int bestmove = m_root.get_first_child()->get_move();
     
     // DK - better move than bestmove above
-#if 0
+#if 1
     float best_winrate = 0.0f;
     for(int x = 0; x < 19; x++) {
         for(int y = 0; y < 19; y++) {
@@ -253,7 +253,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                                         winrate = 0.99f;
                                     }
                                 }
-                            } else if(empty >= 2) {
+                            } /* else if(empty >= 2) {
                                 if(color == to_move) {
                                     if(winrate < 0.99f) {
                                         bestmove = vertex;
@@ -265,7 +265,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                                         winrate = std::max(0.97f, winrate + 0.01f);
                                     }
                                 }
-                            }
+                            } */
                         }
                     }
                 }
