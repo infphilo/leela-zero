@@ -7,6 +7,7 @@ def extract_games(game_file,
                   num_stones,
                   verbose):
     unique_games, trans_unique_games, games = {}, {}, []
+    dk_games = []
     for line in game_file:
         line = line.strip()
         if line.startswith('('):
@@ -40,6 +41,7 @@ def extract_games(game_file,
                 play3 = transform(play, 0, 1)
                 play4 = transform(play, 1, 1)
 
+                dk_play = set(play)
                 play = ''.join(play)
                 play2 = ''.join(play2)
                 play3 = ''.join(play3)
@@ -47,6 +49,7 @@ def extract_games(game_file,
 
                 if play not in unique_games:
                     unique_games[play] = [len(games) - 1]
+                    dk_games.append(dk_play)
                 else:
                     unique_games[play].append(len(games) - 1)
 
@@ -69,6 +72,49 @@ def extract_games(game_file,
         assert game_key in trans_unique_games
         game_num = trans_unique_games[game_key][0]
         print games[game_num]
+
+    dk_unique = [0 for _ in range(len(dk_games))]
+    for i in range(len(dk_games)):
+        if dk_unique[i] > 0:
+            continue
+        dk_play = dk_games[i]
+        for j in range(i+1, len(dk_games)):
+            if dk_unique[j] > 0:
+                continue
+            dk_play2 = dk_games[j]
+            if dk_play == dk_play2:
+                dk_unique[j] += 1
+
+    dk_games2 = []
+    for i in range(len(dk_unique)):
+        if dk_unique[i] > 0:
+            continue
+        dk_games2.append(dk_games[i])
+
+    print >> sys.stderr, len(dk_games2), len(dk_games)
+
+    dk_games =  dk_games2
+    dk_subset = [0 for _ in range(len(dk_games))]
+    for i in range(len(dk_games)):
+        if dk_subset[i] > 0:
+            continue
+        dk_play = dk_games[i]
+        for j in range(i+1, len(dk_games)):
+            dk_play2 = dk_games[j]
+            assert dk_play != dk_play2
+            if dk_play > dk_play2:
+                dk_subset[j] += 1
+            elif dk_play < dk_play2:
+                dk_subset[i] += 1
+                break
+
+    subset_count = 0
+    for sub in dk_subset:
+        if sub == 0:
+            subset_count += 1
+    print >> sys.stderr, "Subset count:", subset_count
+                
+
 
 
 if __name__ == '__main__':
