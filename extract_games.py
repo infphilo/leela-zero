@@ -41,7 +41,7 @@ def extract_games(game_file,
                 play3 = transform(play, 0, 1)
                 play4 = transform(play, 1, 1)
 
-                dk_play = set(play)
+                # dk_play = set(play)
                 play = ''.join(play)
                 play2 = ''.join(play2)
                 play3 = ''.join(play3)
@@ -49,7 +49,7 @@ def extract_games(game_file,
 
                 if play not in unique_games:
                     unique_games[play] = [len(games) - 1]
-                    dk_games.append(dk_play)
+                    # dk_games.append(dk_play)
                 else:
                     unique_games[play].append(len(games) - 1)
 
@@ -73,6 +73,8 @@ def extract_games(game_file,
         game_num = trans_unique_games[game_key][0]
         print games[game_num]
 
+    # DK - debugging purposes
+    """
     dk_unique = [0 for _ in range(len(dk_games))]
     for i in range(len(dk_games)):
         if dk_unique[i] > 0:
@@ -113,7 +115,7 @@ def extract_games(game_file,
         if sub == 0:
             subset_count += 1
     print >> sys.stderr, "Subset count:", subset_count
-                
+    """
 
 
 
