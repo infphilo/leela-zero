@@ -179,7 +179,8 @@ int UCTSearch::get_best_move(passflag_t passflag) {
     
     // DK - better move than bestmove above
 #if 1
-    float best_winrate = 0.0f;
+    float best_mine_winrate = 0.0f, best_enemy_winrate = 0.0f;
+    int best_mine_move = -1, best_enemy_move = -1;
     for(int x = 0; x < 19; x++) {
         for(int y = 0; y < 19; y++) {
             int vertex = m_rootstate.board.get_vertex(x, y);
@@ -191,93 +192,112 @@ int UCTSearch::get_best_move(passflag_t passflag) {
             float winrate = 0.0f;
             for(int c = 0; c < 2; c++) {
                 FastBoard::square_t color = (c == 0 ? FastBoard::BLACK : FastBoard::WHITE);
+                int five = 0, four = 0;
                 for(int i = 0; i < 4; i++) {
-                    for(int j = 0; j < DK_num_stone - 1; j++) {
-                        std::pair<int, int> begin_pos = pos;
-                        begin_pos.first += (dir[i][0] * -j);
-                        begin_pos.second += (dir[i][1] * -j);
-                        std::pair<int, int> tmp_pos = begin_pos;
-                        int count = 0;
-                        for(int s = 0; s < DK_num_stone - 1; s++) {
-                            if(tmp_pos.first < 0 ||
-                               tmp_pos.first >= FastBoard::MAXBOARDSIZE ||
-                               tmp_pos.second < 0 ||
-                               tmp_pos.second >= FastBoard::MAXBOARDSIZE)
-                                break;
+                    int stones[DK_num_stone * 2 - 1] = {0,}; // 0 as empty, 1 as mine, 2 as enemy or wall
+                    std::pair<int, int> tmp_pos = pos;
+                    tmp_pos.first += (dir[i][0] * -(DK_num_stone - 1));
+                    tmp_pos.second += (dir[i][1] * -(DK_num_stone - 1));
+                    for(int j = 0; j < DK_num_stone * 2 - 1; j++) {
+                        if(tmp_pos.first < 0 ||
+                           tmp_pos.first >= FastBoard::MAXBOARDSIZE ||
+                           tmp_pos.second < 0 ||
+                           tmp_pos.second >= FastBoard::MAXBOARDSIZE) {
+                            stones[j] = 2;
+                        } else {
                             if(tmp_pos == pos) {
-                                count += 1;
+                                stones[j] = 1;
                             } else {
                                 FastBoard::square_t tcolor = m_rootstate.board.get_square(tmp_pos.first, tmp_pos.second);
-                                if(tcolor != color)
-                                    break;
-                                count += 1;
+                                if(tcolor == color) {
+                                    stones[j] = 1;
+                                } else if(tcolor == FastBoard::EMPTY) {
+                                    stones[j] = 0;
+                                } else{
+                                    stones[j] = 2;
+                                }
                             }
-                            tmp_pos.first += dir[i][0];
-                            tmp_pos.second += dir[i][1];
                         }
                         
-                        if(count >= DK_num_stone - 1) {
-                            assert(count == DK_num_stone - 1);
-                            int same = 0, empty = 0;
-                            begin_pos.first -= dir[i][0];
-                            begin_pos.second -= dir[i][1];
-                            if(begin_pos.first >= 0 &&
-                               begin_pos.first < FastBoard::MAXBOARDSIZE &&
-                               begin_pos.second >= 0 &&
-                               begin_pos.second < FastBoard::MAXBOARDSIZE) {
-                                FastBoard::square_t tcolor = m_rootstate.board.get_square(begin_pos.first, begin_pos.second);
-                                if(tcolor == color)
-                                    same += 1;
-                                else if(tcolor == FastBoard::EMPTY)
-                                    empty += 1;
+                        tmp_pos.first += dir[i][0];
+                        tmp_pos.second += dir[i][1];
+                    }
+                    
+                    // five
+                    for(int j = 0; j < DK_num_stone; j++) {
+                        int mine_count = 0, empty_count = 0;
+                        for(int k = j; k < j + DK_num_stone; k++) {
+                            if(stones[k] == 1) {
+                                mine_count++;
+                            } else if(stones[k] == 0) {
+                                empty_count++;
                             }
-                            std::pair<int, int> end_pos = tmp_pos;
-                            if(end_pos.first >= 0 &&
-                               end_pos.first < FastBoard::MAXBOARDSIZE &&
-                               end_pos.second >= 0 &&
-                               end_pos.second < FastBoard::MAXBOARDSIZE) {
-                                FastBoard::square_t tcolor = m_rootstate.board.get_square(end_pos.first, end_pos.second);
-                                if(tcolor == color)
-                                    same += 1;
-                                else if(tcolor == FastBoard::EMPTY)
-                                    empty += 1;
-                            }
-                            if(same >= 1) {
-                                assert(same == 1);
-                                if(color == to_move) {
-                                    bestmove = vertex;
-                                    winrate = 1.0f;
-                                } else {
-                                    if(winrate < 1.0f) {
-                                        bestmove = vertex;
-                                        winrate = 0.99f;
-                                    }
-                                }
-                            } /* else if(empty >= 2) {
-                                if(color == to_move) {
-                                    if(winrate < 0.99f) {
-                                        bestmove = vertex;
-                                        winrate = std::max(0.98f, winrate + 0.01f);
-                                    }
-                                } else {
-                                    if(winrate < 0.98f) {
-                                        bestmove = vertex;
-                                        winrate = std::max(0.97f, winrate + 0.01f);
-                                    }
-                                }
-                            } */
+                        }
+                        if(mine_count == DK_num_stone) {
+                            five++;
+                        } else if(mine_count == DK_num_stone - 1 && empty_count == 1) {
+                            four++;
+                        }
+                    }
+                }
+                if(color == to_move) {
+                    if(five > 0) {
+                        best_mine_move = vertex;
+                        best_mine_winrate = 1.0f + five / 1000.0f;
+                    } else if(four > 1) {
+                        float mine_winrate = 0.99f + four / 1000.0f;
+                        if(best_mine_winrate < mine_winrate) {
+                            best_mine_move = vertex;
+                            best_mine_winrate = mine_winrate;
+                        }
+                    } else if(four == 1) {
+                        float mine_winrate = 0.98f;
+                        if(best_mine_winrate < mine_winrate) {
+                            best_mine_move = vertex;
+                            best_mine_winrate = mine_winrate;
+                        }
+                    }
+                } else {
+                    assert(color != FastBoard::EMPTY);
+                    if(five > 0) {
+                        best_enemy_move = vertex;
+                        best_enemy_winrate = 1.0f + five / 1000.0f;;
+                    } else if(four > 1) {
+                        float enemy_winrate = 0.99f + four / 1000.0f;
+                        if(best_enemy_winrate < enemy_winrate) {
+                            best_enemy_move = vertex;
+                            best_enemy_winrate = enemy_winrate;
+                        }
+                    } else if(four == 1) {
+                        float enemy_winrate = 0.98f;
+                        if(best_enemy_winrate < enemy_winrate) {
+                            best_enemy_move = vertex;
+                            best_enemy_winrate = enemy_winrate;
                         }
                     }
                 }
             }
-            if(winrate >= 0.97f && winrate > best_winrate) {
-                bestmove = vertex;
-                best_winrate = winrate;
-            }
         }
     }
-    if(best_winrate >= 0.97f)
-        return bestmove;
+    if(best_mine_winrate >= 0.99f || best_enemy_winrate >= 0.99f) {
+        bool must_play = false;
+        if(best_mine_winrate >= 1.0f) {
+            bestmove = best_mine_move;
+            must_play = true;
+        } else if(best_enemy_winrate >= 1.0f) {
+            bestmove = best_enemy_move;
+            must_play = true;
+        } else if(best_mine_winrate >= 0.99f) {
+            bestmove = best_mine_move;
+            must_play = true;
+        } else if(best_enemy_winrate >= 0.99f && best_mine_winrate < 0.98f) {
+            bestmove = best_enemy_move;
+            must_play = true;
+        }
+        if(must_play) {
+            return bestmove;
+        }
+    }
 #endif
 
     // do we have statistics on the moves?
