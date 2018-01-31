@@ -191,7 +191,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
             int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
             for(int c = 0; c < 2; c++) {
                 FastBoard::square_t color = (c == 0 ? FastBoard::BLACK : FastBoard::WHITE);
-                int five = 0, four = 0;
+                int five = 0, four = 0, three = 0;
                 for(int i = 0; i < 4; i++) {
                     int stones[DK_num_stone * 2 - 1] = {0,}; // 0 as empty, 1 as mine, 2 as enemy or wall
                     std::pair<int, int> tmp_pos = pos;
@@ -236,10 +236,14 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                             five++;
                         } else if(mine_count == DK_num_stone - 1 && empty_count == 1) {
                             four++;
+                        } else if(mine_count == DK_num_stone - 2 && empty_count == 2) {
+                            if(stones[j] == 0 && stones[j + DK_num_stone - 1] == 0) {
+                                three++;
+                            }
                         }
                     }
                 }
-                if(five > 0 || four >= 1) {
+                if(five > 0 || four > 0 || three > 1) {
                     int rank = 0;
                     UCTNode* temp = m_root.get_first_child();
                     while (temp != NULL) {
@@ -256,6 +260,8 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                             mine_winrate += (1.0f + five / 1000.0f);
                         } else if(four > 1) {
                             mine_winrate += (0.99f + four / 1000.0f);
+                        } else if(three > 1) {
+                            mine_winrate += (0.99f + three / 1000.0f);
                         } else if(four == 1) {
                             mine_winrate += 0.98f;
                         }
@@ -270,6 +276,8 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                             enemy_winrate += (1.0f + five / 1000.0f);
                         } else if(four > 1) {
                             enemy_winrate += (0.99f + four / 1000.0f);
+                        } else if(three > 1) {
+                            enemy_winrate += (0.99f + three / 1000.0f);
                         } else if(four == 1) {
                             enemy_winrate += 0.98f;
                         }
