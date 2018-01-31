@@ -189,7 +189,6 @@ int UCTSearch::get_best_move(passflag_t passflag) {
             std::pair<int, int> pos = m_rootstate.board.get_xy(vertex);
             assert(pos.first == x && pos.second == y);
             int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
-            float winrate = 0.0f;
             for(int c = 0; c < 2; c++) {
                 FastBoard::square_t color = (c == 0 ? FastBoard::BLACK : FastBoard::WHITE);
                 int five = 0, four = 0;
@@ -198,7 +197,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                     std::pair<int, int> tmp_pos = pos;
                     tmp_pos.first += (dir[i][0] * -(DK_num_stone - 1));
                     tmp_pos.second += (dir[i][1] * -(DK_num_stone - 1));
-                    for(int j = 0; j < DK_num_stone * 2 - 1; j++) {
+                    for(int j = 0; j < DK_num_stone * 2; j++) {
                         if(tmp_pos.first < 0 ||
                            tmp_pos.first >= FastBoard::MAXBOARDSIZE ||
                            tmp_pos.second < 0 ||
@@ -240,36 +239,40 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                         }
                     }
                 }
-                if(color == to_move) {
-                    if(five > 0) {
-                        best_mine_move = vertex;
-                        best_mine_winrate = 1.0f + five / 1000.0f;
-                    } else if(four > 1) {
-                        float mine_winrate = 0.99f + four / 1000.0f;
-                        if(best_mine_winrate < mine_winrate) {
-                            best_mine_move = vertex;
-                            best_mine_winrate = mine_winrate;
+                if(five > 0 || four >= 1) {
+                    int rank = 0;
+                    UCTNode* temp = m_root.get_first_child();
+                    while (temp != NULL) {
+                        if(temp->get_move() == vertex) {
+                            break;
                         }
-                    } else if(four == 1) {
-                        float mine_winrate = 0.98f;
-                        if(best_mine_winrate < mine_winrate) {
-                            best_mine_move = vertex;
-                            best_mine_winrate = mine_winrate;
-                        }
+                        temp = temp->get_sibling();
+                        rank++;
                     }
-                } else {
-                    assert(color != FastBoard::EMPTY);
-                    if(five > 0) {
-                        best_enemy_move = vertex;
-                        best_enemy_winrate = 1.0f + five / 1000.0f;;
-                    } else if(four > 1) {
-                        float enemy_winrate = 0.99f + four / 1000.0f;
-                        if(best_enemy_winrate < enemy_winrate) {
-                            best_enemy_move = vertex;
-                            best_enemy_winrate = enemy_winrate;
+                    float init_point = (361 - 1 ) / 1000000.0f;
+                    if(color == to_move) {
+                        float mine_winrate = init_point;
+                        if(five > 0) {
+                            mine_winrate += (1.0f + five / 1000.0f);
+                        } else if(four > 1) {
+                            mine_winrate += (0.99f + four / 1000.0f);
+                        } else if(four == 1) {
+                            mine_winrate += 0.98f;
                         }
-                    } else if(four == 1) {
-                        float enemy_winrate = 0.98f;
+                        if(best_mine_winrate < mine_winrate) {
+                            best_mine_move = vertex;
+                            best_mine_winrate = mine_winrate;
+                        }
+                    } else {
+                        assert(color != FastBoard::EMPTY);
+                        float enemy_winrate = init_point;
+                        if(five > 0) {
+                            enemy_winrate += (1.0f + five / 1000.0f);
+                        } else if(four > 1) {
+                            enemy_winrate += (0.99f + four / 1000.0f);
+                        } else if(four == 1) {
+                            enemy_winrate += 0.98f;
+                        }
                         if(best_enemy_winrate < enemy_winrate) {
                             best_enemy_move = vertex;
                             best_enemy_winrate = enemy_winrate;
@@ -280,19 +283,17 @@ int UCTSearch::get_best_move(passflag_t passflag) {
         }
     }
     if(best_mine_winrate >= 0.99f || best_enemy_winrate >= 0.99f) {
-        bool must_play = false;
+        bool must_play = true;
         if(best_mine_winrate >= 1.0f) {
             bestmove = best_mine_move;
-            must_play = true;
         } else if(best_enemy_winrate >= 1.0f) {
             bestmove = best_enemy_move;
-            must_play = true;
         } else if(best_mine_winrate >= 0.99f) {
             bestmove = best_mine_move;
-            must_play = true;
         } else if(best_enemy_winrate >= 0.99f && best_mine_winrate < 0.98f) {
             bestmove = best_enemy_move;
-            must_play = true;
+        } else {
+            must_play = false;
         }
         if(must_play) {
             return bestmove;
