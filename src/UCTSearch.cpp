@@ -261,9 +261,9 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                         } else if(four > 1) {
                             mine_winrate += (0.99f + four / 1000.0f);
                         } else if(three > 1) {
-                            mine_winrate += (0.99f + three / 1000.0f);
+                            mine_winrate += (0.98f + three / 1000.0f);
                         } else if(four == 1) {
-                            mine_winrate += 0.98f;
+                            mine_winrate += 0.97f;
                         }
                         if(best_mine_winrate < mine_winrate) {
                             best_mine_move = vertex;
@@ -277,9 +277,9 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                         } else if(four > 1) {
                             enemy_winrate += (0.99f + four / 1000.0f);
                         } else if(three > 1) {
-                            enemy_winrate += (0.99f + three / 1000.0f);
+                            enemy_winrate += (0.98f + three / 1000.0f);
                         } else if(four == 1) {
-                            enemy_winrate += 0.98f;
+                            enemy_winrate += 0.97f;
                         }
                         if(best_enemy_winrate < enemy_winrate) {
                             best_enemy_move = vertex;
@@ -298,7 +298,11 @@ int UCTSearch::get_best_move(passflag_t passflag) {
             bestmove = best_enemy_move;
         } else if(best_mine_winrate >= 0.99f) {
             bestmove = best_mine_move;
-        } else if(best_enemy_winrate >= 0.99f && best_mine_winrate < 0.98f) {
+        } else if(best_enemy_winrate >= 0.99f && best_mine_winrate < 0.97f) {
+            bestmove = best_enemy_move;
+        } else if(best_mine_winrate >= 0.98f && best_enemy_winrate < 0.97f) {
+            bestmove = best_mine_move;
+        } else if(best_enemy_winrate >= 0.98f && best_mine_winrate < 0.97f) {
             bestmove = best_enemy_move;
         } else {
             must_play = false;
