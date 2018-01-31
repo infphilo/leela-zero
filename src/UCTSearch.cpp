@@ -290,7 +290,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
             }
         }
     }
-    if(best_mine_winrate >= 0.99f || best_enemy_winrate >= 0.99f) {
+    if(best_mine_winrate >= 0.98f || best_enemy_winrate >= 0.98f) {
         bool must_play = true;
         if(best_mine_winrate >= 1.0f) {
             bestmove = best_mine_move;
