@@ -249,7 +249,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                         temp = temp->get_sibling();
                         rank++;
                     }
-                    float init_point = (361 - 1 ) / 1000000.0f;
+                    float init_point = (361 - rank) / 1000000.0f;
                     if(color == to_move) {
                         float mine_winrate = init_point;
                         if(five > 0) {
