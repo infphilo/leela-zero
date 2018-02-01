@@ -286,7 +286,7 @@ int main (int argc, char *argv[]) {
 #endif
     
 #if 0
-    std::string plays = ";B[el];W[fl];B[ek];W[ej];B[em];W[en];B[ei];W[eh];B[fj];W[fk];B[fm]";
+    std::string plays = ";B[le];W[kf];B[lf];W[ld];B[lg];W[lh];B[mf];W[ne];B[li];W[nd];B[ng];W[kd];B[md];W[nb]";
     for(int i = 1; i < plays.length(); i += 6) {
         maingame->display_state();
         std::string gtp_cmd = "play";
@@ -304,7 +304,7 @@ int main (int argc, char *argv[]) {
         }
     }
     maingame->display_state();
-    if(!GTP::execute(*maingame, "genmove w")) {
+    if(!GTP::execute(*maingame, "genmove b")) {
     }
     maingame->display_state();
 #endif

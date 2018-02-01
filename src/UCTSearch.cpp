@@ -295,21 +295,21 @@ int UCTSearch::get_best_move(passflag_t passflag) {
         }
     }
     if(best_mine_winrate >= 0.98f || best_enemy_winrate >= 0.98f) {
-        bool must_play = true;
+        bool must_play = false;
         if(best_mine_winrate >= 1.0f) {
             bestmove = best_mine_move;
+            must_play = true;
         } else if(best_enemy_winrate >= 1.0f) {
             bestmove = best_enemy_move;
+            must_play = true;
         } else if(best_mine_winrate >= 0.99f) {
             bestmove = best_mine_move;
+            must_play = true;
         } else if(best_enemy_winrate >= 0.99f && best_mine_winrate < 0.97f) {
-            bestmove = best_enemy_move;
         } else if(best_mine_winrate >= 0.98f && best_enemy_winrate < 0.97f) {
             bestmove = best_mine_move;
+            must_play = true;
         } else if(best_enemy_winrate >= 0.98f && best_mine_winrate < 0.97f) {
-            bestmove = best_enemy_move;
-        } else {
-            must_play = false;
         }
         if(must_play) {
             return bestmove;
