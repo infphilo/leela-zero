@@ -117,7 +117,7 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     float sum = 0.0f;
     for (auto& node : raw_netlist.first) {
         if(node.second == FastBoard::PASS) {
-            node.first = 0.0;
+            node.first = 0.0f;
         } else {
             node.first = 100.0f + Random::get_Rng().randflt();
             sum += node.first;
@@ -128,6 +128,109 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
     }
     
     net_eval = 0.5f;
+#endif
+    
+#if 0
+    float best_mine_winrate = 0.0f, best_enemy_winrate = 0.0f;
+    int best_mine_move = -1, best_enemy_move = -1;
+    for (auto& node : raw_netlist.first) {
+        int vertex = node.second;
+        if(vertex == FastBoard::PASS) continue;
+        if(state.board.get_square(vertex) != FastBoard::EMPTY) continue;
+        std::pair<int, int> pos = state.board.get_xy(vertex);
+        int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
+        for(int c = 0; c < 2; c++) {
+            FastBoard::square_t color = (c == 0 ? FastBoard::BLACK : FastBoard::WHITE);
+            int five = 0, four = 0, three = 0;
+            for(int i = 0; i < 4; i++) {
+                int stones[DK_num_stone * 2 - 1] = {0,}; // 0 as empty, 1 as mine, 2 as enemy or wall
+                std::pair<int, int> tmp_pos = pos;
+                tmp_pos.first += (dir[i][0] * -(DK_num_stone - 1));
+                tmp_pos.second += (dir[i][1] * -(DK_num_stone - 1));
+                for(int j = 0; j < DK_num_stone * 2; j++) {
+                    if(tmp_pos.first < 0 ||
+                       tmp_pos.first >= FastBoard::MAXBOARDSIZE ||
+                       tmp_pos.second < 0 ||
+                       tmp_pos.second >= FastBoard::MAXBOARDSIZE) {
+                        stones[j] = 2;
+                    } else {
+                        if(tmp_pos == pos) {
+                            stones[j] = 1;
+                        } else {
+                            FastBoard::square_t tcolor = state.board.get_square(tmp_pos.first, tmp_pos.second);
+                            if(tcolor == color) {
+                                stones[j] = 1;
+                            } else if(tcolor == FastBoard::EMPTY) {
+                                stones[j] = 0;
+                            } else{
+                                stones[j] = 2;
+                            }
+                        }
+                    }
+                    
+                    tmp_pos.first += dir[i][0];
+                    tmp_pos.second += dir[i][1];
+                }
+                
+                // five
+                for(int j = 0; j < DK_num_stone; j++) {
+                    int mine_count = 0, empty_count = 0;
+                    for(int k = j; k < j + DK_num_stone; k++) {
+                        if(stones[k] == 1) {
+                            mine_count++;
+                        } else if(stones[k] == 0) {
+                            empty_count++;
+                        }
+                    }
+                    if(mine_count == DK_num_stone) {
+                        five++;
+                    } else if(mine_count == DK_num_stone - 1 && empty_count == 1) {
+                        four++;
+                    } else if(mine_count == DK_num_stone - 2 && empty_count == 2) {
+                        if(stones[j] == 0 || stones[j + DK_num_stone - 1] == 0) {
+                            three++;
+                        }
+                    }
+                }
+            }
+            if(five > 0 || four > 0 || three > 1) {
+                if(color == to_move) {
+                    float mine_winrate = 0.0f;
+                    if(five > 0) {
+                        mine_winrate += (1.0f + five / 1000.0f);
+                        node.first = 100.0f;
+                    } else if(four > 1) {
+                        mine_winrate += (0.99f + four / 1000.0f);
+                    } else if(three > 1) {
+                        mine_winrate += (0.98f + three / 1000.0f);
+                    } else if(four == 1) {
+                        mine_winrate += 0.97f;
+                    }
+                    if(best_mine_winrate < mine_winrate) {
+                        best_mine_move = vertex;
+                        best_mine_winrate = mine_winrate;
+                    }
+                } else {
+                    assert(color != FastBoard::EMPTY);
+                    float enemy_winrate = 0.0f;
+                    if(five > 0) {
+                        enemy_winrate += (1.0f + five / 1000.0f);
+                        node.first = 90.0f;
+                    } else if(four > 1) {
+                        enemy_winrate += (0.99f + four / 1000.0f);
+                    } else if(three > 1) {
+                        enemy_winrate += (0.98f + three / 1000.0f);
+                    } else if(four == 1) {
+                        enemy_winrate += 0.97f;
+                    }
+                    if(best_enemy_winrate < enemy_winrate) {
+                        best_enemy_move = vertex;
+                        best_enemy_winrate = enemy_winrate;
+                    }
+                }
+            }
+        }
+    }
 #endif
     
     // our search functions evaluate from black's point of view

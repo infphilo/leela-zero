@@ -237,8 +237,12 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                         } else if(mine_count == DK_num_stone - 1 && empty_count == 1) {
                             four++;
                         } else if(mine_count == DK_num_stone - 2 && empty_count == 2) {
-                            if(stones[j] == 0 && stones[j + DK_num_stone - 1] == 0) {
-                                three++;
+                            if(stones[j] == 0) {
+                                if(stones[j + DK_num_stone - 1] == 0) {
+                                    three++;
+                                } else if(stones[j+1] == 1 && j < DK_num_stone - 1 && stones[j + DK_num_stone] == 0) {
+                                    three++;
+                                }
                             }
                         }
                     }
