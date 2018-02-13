@@ -131,8 +131,6 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
 #endif
     
 #if 0
-    float best_mine_winrate = 0.0f, best_enemy_winrate = 0.0f;
-    int best_mine_move = -1, best_enemy_move = -1;
     for (auto& node : raw_netlist.first) {
         int vertex = node.second;
         if(vertex == FastBoard::PASS) continue;
@@ -141,7 +139,7 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
         int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {-1,  1}};
         for(int c = 0; c < 2; c++) {
             FastBoard::square_t color = (c == 0 ? FastBoard::BLACK : FastBoard::WHITE);
-            int five = 0, four = 0, three = 0;
+            int five = 0;
             for(int i = 0; i < 4; i++) {
                 int stones[DK_num_stone * 2 - 1] = {0,}; // 0 as empty, 1 as mine, 2 as enemy or wall
                 std::pair<int, int> tmp_pos = pos;
@@ -184,48 +182,18 @@ bool UCTNode::create_children(std::atomic<int> & nodecount,
                     }
                     if(mine_count == DK_num_stone) {
                         five++;
-                    } else if(mine_count == DK_num_stone - 1 && empty_count == 1) {
-                        four++;
-                    } else if(mine_count == DK_num_stone - 2 && empty_count == 2) {
-                        if(stones[j] == 0 || stones[j + DK_num_stone - 1] == 0) {
-                            three++;
-                        }
                     }
                 }
             }
-            if(five > 0 || four > 0 || three > 1) {
+            if(five > 0 ) {
                 if(color == to_move) {
-                    float mine_winrate = 0.0f;
                     if(five > 0) {
-                        mine_winrate += (1.0f + five / 1000.0f);
-                        node.first = 100.0f;
-                    } else if(four > 1) {
-                        mine_winrate += (0.99f + four / 1000.0f);
-                    } else if(three > 1) {
-                        mine_winrate += (0.98f + three / 1000.0f);
-                    } else if(four == 1) {
-                        mine_winrate += 0.97f;
-                    }
-                    if(best_mine_winrate < mine_winrate) {
-                        best_mine_move = vertex;
-                        best_mine_winrate = mine_winrate;
+                        node.first = 10000.0f;
                     }
                 } else {
                     assert(color != FastBoard::EMPTY);
-                    float enemy_winrate = 0.0f;
                     if(five > 0) {
-                        enemy_winrate += (1.0f + five / 1000.0f);
-                        node.first = 90.0f;
-                    } else if(four > 1) {
-                        enemy_winrate += (0.99f + four / 1000.0f);
-                    } else if(three > 1) {
-                        enemy_winrate += (0.98f + three / 1000.0f);
-                    } else if(four == 1) {
-                        enemy_winrate += 0.97f;
-                    }
-                    if(best_enemy_winrate < enemy_winrate) {
-                        best_enemy_move = vertex;
-                        best_enemy_winrate = enemy_winrate;
+                        node.first = 9000.0f;
                     }
                 }
             }
