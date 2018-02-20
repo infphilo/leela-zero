@@ -1,46 +1,30 @@
-THE_OS := $(shell uname -s)
-
 default:
-	@echo "Detected OS: ${THE_OS}"
 	$(MAKE) CC=gcc CXX=g++ \
-		CXXFLAGS='$(CXXFLAGS) -Wall -Wextra -pipe -O3 -g -ffast-math -flto -march=native -std=c++14 -DNDEBUG'  \
+		CXXFLAGS='$(CXXFLAGS) -Wall -Wextra -pipe -O3 -g -ffast-math -flto -std=c++14 -DNDEBUG'  \
 		LDFLAGS='$(LDFLAGS) -flto -g' \
 		leelaz
 
 debug:
-	@echo "Detected OS: ${THE_OS}"
 	$(MAKE) CC=gcc CXX=g++ \
 		CXXFLAGS='$(CXXFLAGS) -Wall -Wextra -pipe -Og -g -std=c++14' \
 		LDFLAGS='$(LDFLAGS) -g' \
 		leelaz
 
 clang:
-	@echo "Detected OS: ${THE_OS}"
 	$(MAKE) CC=clang-5.0 CXX=clang++-5.0 \
-		CXXFLAGS='$(CXXFLAGS) -Wall -Wextra -Wno-missing-braces -O3 -ffast-math -flto -march=native -std=c++14 -DNDEBUG' \
+		CXXFLAGS='$(CXXFLAGS) -Wall -Wextra -Wno-missing-braces -O3 -ffast-math -flto -std=c++14 -DNDEBUG' \
 		LDFLAGS='$(LDFLAGS) -flto -fuse-linker-plugin' \
 		leelaz
 
-DYNAMIC_LIBS = -lboost_program_options -lpthread -lz
-LIBS =
+DYNAMIC_LIBS = -lpthread -lz
+LIBS = /cm/shared/apps/boost/gcc/1.61.0/lib/libboost_program_options.a
+LIBS += /cm/shared/apps/cuda80/lib64/libOpenCL.so
+LIBS += /cm/shared/apps/openblas/gcc/0.2.14/lib/libopenblas.so
 
-ifeq ($(THE_OS),Linux)
 # for Linux with OpenBLAS
-# CXXFLAGS += -I/usr/include/openblas
+CXXFLAGS += -I/cm/shared/apps/boost/gcc/1.61.0/include -I/cm/shared/apps/openblas/gcc/0.2.14/include
 # DYNAMIC_LIBS += -lopenblas
 # DYNAMIC_LIBS += -lOpenCL
-endif
-
-# for macOS (comment out the Linux part)
-LIBS += -framework Accelerate
-LIBS += -framework OpenCL 
-CXXFLAGS += -I/Systm/Library/Frameworks/Accelerate.framework/Versions/Current/Headers -I/usr/local/opt/openblas/include
-LDFLAGS += -L/usr/local/opt/openblas/lib
-
-# for MKL instead of OpenBLAS
-#DYNAMIC_LIBS += -lmkl_rt
-#CXXFLAGS += -I/opt/intel/mkl/include
-#LDFLAGS  += -L/opt/intel/mkl/lib/intel64/
 
 CXXFLAGS += -I.
 CPPFLAGS += -MD -MP
